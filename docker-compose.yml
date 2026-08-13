@@ -1,0 +1,32 @@
+# Local full-stack smoke test: `docker compose up --build`
+# then open http://localhost:8080 (frontend) — it talks to
+# http://localhost:8000 (backend) automatically.
+#
+# This is for local/self-hosted runs only. For real deployment, ship the
+# backend and frontend as two separate services (see README.md /
+# SETUP_CHECKLIST.md) — most hosts (Railway, Vercel) build straight from
+# their own Dockerfile or framework detection, not from this file.
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - trendpulse_db:/app/data
+    environment:
+      - DB_PATH=/app/data/trendpulse.db
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+volumes:
+  trendpulse_db:

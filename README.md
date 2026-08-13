@@ -1,0 +1,123 @@
+# TrendPulse
+
+A fully autonomous "Micro-SaaS (video/trend digest) × paid newsletter" system.
+No human touches an issue between trend collection and delivery. Every
+integration below is a **real** API call — nothing is mocked except the
+one place explicitly noted (the LP's interactive demo).
+
+```
+trendpulse/
+├── backend/            FastAPI app, agents, workflow, DB
+│   ├── config.py        env-var settings loader
+│   ├── db.py             SQLite persistence (subscribers, issues)
+│   ├── agents/
+│   │   ├── trend_scraper.py      TrendScraperAgent — real YouTube Data API v3
+│   │   └── content_generator.py  ContentGeneratorAgent — real Anthropic API
+│   ├── email_service.py  EmailService — real Mailgun REST API
+│   ├── stripe_webhook.py Stripe webhook handler (signature-verified)
+│   ├── workflow/
+│   │   └── automation.py AutomationWorkflow — orchestrates the full cycle
+│   ├── main.py            FastAPI routes
+│   ├── requirements.txt
+│   └── .env.example
+└── frontend/            React + Vite + Tailwind landing page
+    ├── src/components/  Hero, Features, InteractivePreview, Pricing, Footer
+    └── ...
+```
+
+## Why real data, not simulation
+
+The spec asked for trend collection to "simulate Perplexity/web search." I
+deliberately built against the **real YouTube Data API v3** (`chart=mostPopular`)
+instead of having an LLM invent plausible-sounding trending videos — a paid
+newsletter that quietly fabricates its source data is selling something
+false to paying subscribers. Likewise, email delivery calls the real
+Mailgun REST API rather than simulating a send. The only intentional mock in
+the whole system is the LP's "Interactive Preview" widget, which is
+client-side only and does not call the live LLM — a public, unauthenticated
+form wired to a real Claude call would let anyone on the internet spend your
+API budget for free.
+
+## Backend setup
+
+```bash
+cd backend
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # then fill in the real values below
+uvicorn main:app --reload --port 8000
+```
+
+### Required environment variables
+
+| Variable | Where to get it |
+|---|---|
+| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com) — API Keys |
+| `YOUTUBE_API_KEY` | [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) — create a project, enable "YouTube Data API v3", create an API key. Free quota (10,000 units/day) |
+| `STRIPE_SECRET_KEY` | Stripe Dashboard → Developers → API keys |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Developers → Webhooks → add endpoint `POST /webhooks/stripe`, listen for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted` |
+| `STRIPE_PRICE_ID` | The Price object backing your $29/mo Payment Link |
+| `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` | [mailgun.com](https://mailgun.com) — verify a sending domain (DNS records) |
+| `LP_BASE_URL` | Your deployed frontend's public URL |
+| `INTERNAL_TRIGGER_TOKEN` | Any long random string — protects `/internal/*` routes |
+
+None of these accounts can be created on your behalf — API keys and
+domain verification require you to own the account.
+
+### Triggering the daily cycle
+
+There is no built-in scheduler (keeps the web process lightweight). Point
+any external scheduler (host cron, your platform's scheduled-job feature,
+or a one-line GitHub Actions workflow) at:
+
+```bash
+curl -X POST https://your-api.example.com/internal/run-cycle \
+  -H "X-Internal-Token: $INTERNAL_TRIGGER_TOKEN"
+```
+
+once a day. This runs `TrendScraperAgent → ContentGeneratorAgent → db →
+EmailService` end to end and emails every active `pro` subscriber.
+
+## Frontend setup
+
+```bash
+cd frontend
+npm install
+cp .env.example .env   # if you create one — see variables below
+npm run dev             # local dev, http://localhost:5173
+npm run build            # production build → dist/
+```
+
+### Frontend environment variables (Vite, optional)
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `VITE_API_BASE_URL` | `http://localhost:8000` | Backend URL the signup form posts to |
+| `VITE_STRIPE_PAYMENT_LINK` | placeholder | Real Stripe Payment Link / Checkout URL for the $29/mo "Upgrade to Pro" button |
+
+Set these in a `frontend/.env` file or your hosting platform's environment
+config before deploying.
+
+## What still requires your own action
+
+- Creating the Google Cloud project + enabling YouTube Data API v3
+- Creating an Anthropic account and API key
+- Creating a Stripe account, Product/Price, Payment Link, and registering the webhook endpoint
+- Creating a Mailgun account and verifying a sending domain (DNS)
+- Deploying both services somewhere (backend: Railway/Fly.io/Render/a VPS;
+  frontend: Vercel/Netlify/Cloudflare Pages) and pointing `LP_BASE_URL` /
+  `VITE_API_BASE_URL` at the real deployed URLs
+- Swapping SQLite for Postgres if you expect meaningful concurrent write
+  volume (the `db.py` query layer is written so this is a connection-string
+  change, not a rewrite)
+
+## Verification performed
+
+- All backend `.py` files: `py_compile` clean, and a full `import` of every
+  module (including the FastAPI `app` object) succeeds with all 9 routes
+  registered, using dependencies actually installed from `requirements.txt`.
+- Frontend: `npm install` + `npm run build` succeed with no errors; verified
+  live in a dev-server preview — all five sections render, the signup form,
+  language switcher, and the Interactive Preview's mock 3-step
+  scrape→generate→ready flow all work correctly (including the JA/ES/EN
+  content swap and LP-link append).
