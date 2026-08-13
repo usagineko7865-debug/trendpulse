@@ -1,0 +1,33 @@
+name: TrendPulse Daily Trigger
+
+# Fires the deployed backend's automation cycle once a day. Requires two
+# repo secrets to be set (Settings -> Secrets and variables -> Actions):
+#   TRENDPULSE_API_URL       e.g. https://trendpulse-backend-production.up.railway.app
+#   TRENDPULSE_INTERNAL_TOKEN  same value as the backend's INTERNAL_TRIGGER_TOKEN
+#
+# See SETUP_CHECKLIST.md step 4 for the full walkthrough.
+
+on:
+  schedule:
+    - cron: "0 13 * * *" # 13:00 UTC daily — adjust to your preferred send time
+  workflow_dispatch: {} # lets you fire it manually from the Actions tab to test
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call /internal/run-cycle
+        run: |
+          if [ -z "${{ secrets.TRENDPULSE_API_URL }}" ] || [ -z "${{ secrets.TRENDPULSE_INTERNAL_TOKEN }}" ]; then
+            echo "::error::TRENDPULSE_API_URL / TRENDPULSE_INTERNAL_TOKEN secrets are not set. See SETUP_CHECKLIST.md step 4."
+            exit 1
+          fi
+          http_code=$(curl -s -o response.json -w "%{http_code}" -X POST \
+            "${{ secrets.TRENDPULSE_API_URL }}/internal/run-cycle" \
+            -H "X-Internal-Token: ${{ secrets.TRENDPULSE_INTERNAL_TOKEN }}")
+          echo "HTTP status: $http_code"
+          cat response.json
+          if [ "$http_code" -ge 300 ]; then
+            echo "::error::run-cycle request failed with status $http_code"
+            exit 1
+          fi
