@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1200px;height:630px;overflow:hidden}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    background:linear-gradient(135deg,#FBF4E7 0%,#F3E4CE 60%,#E9F0E9 100%);
+    position:relative;
+  }
+  .grid{
+    position:absolute;inset:0;
+    background-image:linear-gradient(rgba(42,35,24,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(42,35,24,.05) 1px,transparent 1px);
+    background-size:46px 46px;
+    -webkit-mask-image:radial-gradient(120% 90% at 30% 20%,#000 30%,transparent 100%);
+  }
+  .glow{position:absolute;bottom:-260px;right:-160px;width:640px;height:640px;border-radius:50%;background:#106B60;filter:blur(150px);opacity:.16}
+  .stage{position:relative;padding:70px 76px}
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:46px}
+  .mark{width:46px;height:46px;border-radius:14px;background:#FF5B3C;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px -8px rgba(255,91,60,.5)}
+  .brand b{font-family:'Fredoka',sans-serif;font-size:26px;font-weight:600;color:#2A2318}
+  .badge{display:inline-flex;align-items:center;gap:8px;background:#FFE2D3;color:#E0431F;font-size:14px;font-weight:700;padding:8px 16px;border-radius:100px;margin-bottom:26px}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:#FF5B3C}
+  h1{font-family:'Fredoka',sans-serif;font-size:64px;font-weight:600;line-height:1.08;letter-spacing:-.01em;color:#2A2318;max-width:920px}
+  h1 span{color:#FF5B3C}
+  p{margin-top:26px;font-size:22px;color:#6E6353;max-width:680px;line-height:1.5}
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="glow"></div>
+  <div class="stage">
+    <div class="brand">
+      <div class="mark">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2-7 4 14 2-7h6" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <b>TrendPulse</b>
+    </div>
+    <div class="badge"><span class="dot"></span>Fully autonomous — zero human editors</div>
+    <h1>The internet's pulse,<br><span>before your coffee's ready.</span></h1>
+    <p>Real trending videos, worldwide, turned into a newsletter you'd actually want to read. No humans in the loop.</p>
+  </div>
+</body>
+</html>

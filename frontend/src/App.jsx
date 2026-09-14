@@ -6,10 +6,10 @@ import Footer from "./components/Footer.jsx";
 
 export default function App() {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-ink-950">
-      {/* ambient background glow, shared across the page */}
-      <div className="pointer-events-none fixed inset-0 bg-grid-glow" />
-      <div className="pointer-events-none fixed -top-40 right-0 h-96 w-96 rounded-full bg-electric-blue/10 blur-3xl" />
+    <div className="relative min-h-screen overflow-x-hidden bg-paper">
+      {/* soft warm glow, shared across the page — replaces the old moody dark-mode gradient */}
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,91,60,0.10),transparent_55%)]" />
+      <div className="pointer-events-none fixed -top-32 -right-24 h-96 w-96 rounded-full bg-teal/10 blur-3xl" />
 
       <div className="relative">
         <Hero />

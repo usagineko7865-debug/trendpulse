@@ -7,13 +7,17 @@
     scroll-behavior: smooth;
   }
   body {
-    @apply bg-ink-950 text-slate-200 antialiased;
+    @apply bg-paper text-ink antialiased;
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  ::selection {
+    background: #ff5b3c;
+    color: #fff;
   }
 }
 
 @layer utilities {
-  .text-gradient {
-    @apply bg-cta-gradient bg-clip-text text-transparent;
+  .font-display {
+    font-family: "Fredoka", -apple-system, sans-serif;
   }
 }

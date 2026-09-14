@@ -1,39 +1,39 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
-  darkMode: "class",
   theme: {
     extend: {
       colors: {
-        "neon-purple": "#8B5CF6",
-        "electric-blue": "#06B6D4",
+        paper: "#FBF4E7",
+        "paper-soft": "#F3E8D3",
+        card: "#FFFDF8",
         ink: {
-          950: "#05050A",
-          900: "#0A0A14",
-          800: "#12121F",
-          700: "#1B1B2E",
+          DEFAULT: "#2A2318",
+          soft: "#6E6353",
+          faint: "#A69A85",
         },
+        coral: {
+          DEFAULT: "#FF5B3C",
+          deep: "#E0431F",
+          soft: "#FFE2D3",
+        },
+        teal: {
+          DEFAULT: "#106B60",
+          soft: "#DCECE6",
+        },
+        line: "#E9DBBE",
       },
       fontFamily: {
-        sans: [
-          "Inter",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
-          "sans-serif",
-        ],
-      },
-      backgroundImage: {
-        "grid-glow":
-          "radial-gradient(circle at 50% 0%, rgba(139,92,246,0.18), transparent 60%)",
-        "cta-gradient": "linear-gradient(90deg, #8B5CF6 0%, #06B6D4 100%)",
+        display: ["Fredoka", "sans-serif"],
+        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "sans-serif"],
       },
       boxShadow: {
-        glow: "0 0 40px rgba(139,92,246,0.35)",
-        "glow-blue": "0 0 40px rgba(6,182,212,0.3)",
+        card: "0 2px 0 0 rgba(42,35,24,0.06), 0 12px 30px -12px rgba(42,35,24,0.18)",
+        pop: "0 10px 28px -8px rgba(255,91,60,0.45)",
+        lift: "0 20px 50px -20px rgba(42,35,24,0.25)",
       },
-      animation: {
-        "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      borderRadius: {
+        xl2: "1.75rem",
       },
     },
   },

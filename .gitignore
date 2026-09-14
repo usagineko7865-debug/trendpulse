@@ -11,3 +11,10 @@ frontend/dist/
 frontend/.env
 
 .DS_Store
+
+# Runtime secrets / local automation state (never commit)
+.internal_trigger_token.txt
+.x_engage_zero_streak.txt
+.x_last_posted_issue.txt
+.x_reply_state.json
+NEEDS_ATTENTION.md
