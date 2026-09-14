@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://usagineko7865-debug.github.io/trendpulse/sitemap.xml
