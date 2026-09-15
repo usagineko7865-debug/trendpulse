@@ -18,3 +18,4 @@ frontend/.env
 .x_last_posted_issue.txt
 .x_reply_state.json
 NEEDS_ATTENTION.md
+automation/__pycache__/
