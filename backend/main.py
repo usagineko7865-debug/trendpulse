@@ -145,15 +145,18 @@ class TestEmailRequest(BaseModel):
 
 @app.post("/internal/test-email")
 async def test_email(body: TestEmailRequest, x_internal_token: str | None = Header(None)):
-    """Sends one real test email — added to verify Gmail SMTP delivery
-    end-to-end after replacing sandbox-locked Mailgun, without needing to
-    fake a subscriber into 'pro' status just to trigger a send."""
+    """Sends one real test email through whatever EmailService is currently
+    configured — added to verify delivery end-to-end after replacing
+    sandbox-locked Mailgun, without needing to fake a subscriber into 'pro'
+    status just to trigger a send. Kept around since we've changed email
+    providers twice already and this is the fastest way to confirm the next
+    one actually works too."""
     _check_internal_token(x_internal_token)
     emailer = EmailService()
     ok = await emailer.send(
         body.to,
         "TrendPulse — test email",
-        "<p>This is a test email from TrendPulse's backend, confirming Gmail SMTP delivery works.</p>",
+        "<p>This is a test email from TrendPulse's backend, confirming email delivery works.</p>",
     )
     if not ok:
         raise HTTPException(status_code=502, detail="Send failed — check server logs")

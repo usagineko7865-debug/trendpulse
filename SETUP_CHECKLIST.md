@@ -11,7 +11,7 @@ is written so you can do it in one sitting with no side-decisions.
 - [ ] **Anthropic** — [console.anthropic.com](https://console.anthropic.com) → Settings → API Keys → Create Key. Copy it.
 - [ ] **YouTube Data API v3** — [console.cloud.google.com/apis/credentials](https://console.cloud.google.com/apis/credentials) → New Project → APIs & Services → Library → search "YouTube Data API v3" → Enable → Credentials → Create Credentials → API Key. Copy it. (Free, 10,000 units/day.)
 - [ ] **Stripe** — [dashboard.stripe.com/register](https://dashboard.stripe.com/register) → after signup: Developers → API keys → copy the **Secret key**. Then Product catalog → Add product → name "TrendPulse Pro", price **$29.00/month recurring** → Save → copy the **Price ID** (`price_...`) shown on the product page. Then Payment Links → Create payment link → select the TrendPulse Pro price → Create → copy the link URL (this goes into the frontend's `VITE_STRIPE_PAYMENT_LINK`).
-- [ ] **Gmail App Password** (instead of Mailgun — its free tier is sandbox-only and can't actually email real subscribers) — enable 2-Step Verification on the Gmail account you want to send from, then [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) → generate one → copy the 16-character password. No domain needed.
+- [ ] **Brevo** (instead of Mailgun — sandbox-only — or Gmail SMTP — blocked outright by Railway's network) — [app.brevo.com](https://app.brevo.com) → sign up → Senders, Domains & Dedicated IPs → add your sender email → verify via the confirmation email Brevo sends → Settings → SMTP & API → API Keys → generate one, copy it. Free tier: 300 emails/day, no domain needed.
 
 ## 2. Deploy the backend (Railway — Dockerfile already included, ~5 min)
 

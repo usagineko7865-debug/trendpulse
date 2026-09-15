@@ -22,18 +22,21 @@ class Settings:
     STRIPE_WEBHOOK_SECRET: str = os.getenv("STRIPE_WEBHOOK_SECRET", "")
     STRIPE_PRICE_ID: str = os.getenv("STRIPE_PRICE_ID", "")  # price_xxx for the $29/mo plan
 
-    # --- Email delivery (Gmail SMTP) ---
-    # Switched off Mailgun 2026-09-16: MAILGUN_DOMAIN was a sandbox domain,
-    # which Mailgun hard-restricts to a handful of pre-authorized recipient
-    # addresses — a real paying subscriber would never receive their
-    # newsletter. Fixing that properly means verifying an owned domain with
-    # Mailgun (costs money, needs a domain purchase), so for now this sends
-    # via the founder's own Gmail account over SMTP with an App Password —
-    # free, no domain needed, and Gmail's own sending reputation carries it.
-    # Not meant to be the long-term answer (Gmail's send limit is ~500/day
-    # for a regular account) but it actually delivers, unlike sandbox mode.
-    GMAIL_ADDRESS: str = os.getenv("GMAIL_ADDRESS", "")
-    GMAIL_APP_PASSWORD: str = os.getenv("GMAIL_APP_PASSWORD", "")
+    # --- Email delivery (Brevo HTTP API) ---
+    # Chronology (all 2026-09-16): Mailgun's free tier is sandbox-only
+    # (delivers only to a handful of pre-authorized addresses — a real
+    # subscriber would never get their newsletter) -> switched to Gmail SMTP
+    # with an App Password (free, no domain) -> that failed too, but not on
+    # credentials: Railway's containers block outbound SMTP-port traffic
+    # entirely (confirmed by sending successfully from a local machine with
+    # the exact same credentials, and by every other outbound HTTPS call in
+    # this app — YouTube/Anthropic/Stripe — working fine). So the fix isn't
+    # "better SMTP code", it's "don't use SMTP" -> Brevo's REST API over
+    # HTTPS, which isn't subject to that port block. Free tier: 300
+    # emails/day, and verifying one sender address is enough — no owned
+    # domain required, unlike Mailgun's paid/verified tier.
+    BREVO_API_KEY: str = os.getenv("BREVO_API_KEY", "")
+    BREVO_SENDER_EMAIL: str = os.getenv("BREVO_SENDER_EMAIL", "")
     MAIL_FROM_NAME: str = os.getenv("MAIL_FROM_NAME", "TrendPulse")
 
     # --- App ---
