@@ -101,7 +101,7 @@ export default function Hero() {
 
           <p className="mt-3 text-xs text-ink-faint">
             {status === "done"
-              ? "You're in! Check your inbox for your first free issue. 🎉"
+              ? "You're in! Bookmark this page — fresh trend angles land here every morning. Want it delivered to your inbox instead? Upgrade to Pro anytime. 🎉"
               : status === "error"
               ? "Couldn't reach the API — is the backend running?"
               : "Free forever plan · no credit card · unsubscribe in one click"}
@@ -110,7 +110,7 @@ export default function Hero() {
           <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-ink-soft">
             <TrustBadge label="Real trending videos, never invented" />
             <TrustBadge label="EN · ES · JA every day" />
-            <TrustBadge label="New ideas in your inbox by 7am" />
+            <TrustBadge label="Fresh angles on the site every morning" />
           </div>
         </div>
 

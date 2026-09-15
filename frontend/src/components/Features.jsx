@@ -72,7 +72,7 @@ export default function Features() {
         </h2>
         <p className="mt-4 text-ink-soft">
           Three steps, every single day — from raw trend data to a content
-          idea sitting in your inbox, with nobody in between.
+          idea ready to use, with nobody in between.
         </p>
       </div>
 
