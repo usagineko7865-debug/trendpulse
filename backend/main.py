@@ -9,6 +9,7 @@ Routes:
     POST /internal/run-cycle     manually trigger the AutomationWorkflow (protected)
     GET  /internal/latest-issue  inspect the most recently generated issue (protected)
     GET  /internal/stats         aggregate subscriber/issue counts, no PII (protected)
+    POST /internal/test-email    send one test email to a given address (protected)
 
 Scheduling: this file does NOT run a built-in scheduler by design (keeps the
 web process lightweight and horizontally scalable). Point any external
@@ -29,6 +30,7 @@ from config import get_settings
 import db
 from stripe_webhook import StripeWebhookHandler
 from workflow.automation import AutomationWorkflow
+from email_service import EmailService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("trendpulse.main")
@@ -135,3 +137,24 @@ def stats(x_internal_token: str | None = Header(None)):
     without needing direct DB/SSH access to the deployed container."""
     _check_internal_token(x_internal_token)
     return db.subscriber_stats()
+
+
+class TestEmailRequest(BaseModel):
+    to: EmailStr
+
+
+@app.post("/internal/test-email")
+async def test_email(body: TestEmailRequest, x_internal_token: str | None = Header(None)):
+    """Sends one real test email — added to verify Gmail SMTP delivery
+    end-to-end after replacing sandbox-locked Mailgun, without needing to
+    fake a subscriber into 'pro' status just to trigger a send."""
+    _check_internal_token(x_internal_token)
+    emailer = EmailService()
+    ok = await emailer.send(
+        body.to,
+        "TrendPulse — test email",
+        "<p>This is a test email from TrendPulse's backend, confirming Gmail SMTP delivery works.</p>",
+    )
+    if not ok:
+        raise HTTPException(status_code=502, detail="Send failed — check server logs")
+    return {"status": "ok", "to": body.to}
