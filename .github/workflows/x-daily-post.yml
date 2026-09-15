@@ -1,0 +1,55 @@
+name: X Daily Post
+
+# Posts today's TrendPulse issue to X via the real API — replaces the
+# browser-automation Claude task for this one job (see automation/post_to_x.py
+# for why). Runs a couple hours after the content pipeline (daily-trigger.yml)
+# so there's always a fresh issue to post.
+#
+# Requires 6 repo secrets (Settings -> Secrets and variables -> Actions):
+#   TRENDPULSE_API_URL, TRENDPULSE_INTERNAL_TOKEN   (same as daily-trigger.yml)
+#   X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET
+#     (from a Free-tier Project/App at https://developer.x.com with
+#      Read+Write permissions on the @pgpg399 account)
+
+on:
+  schedule:
+    - cron: "30 15 * * *" # 15:30 UTC daily (a couple hours after the 13:00 UTC content pipeline)
+  workflow_dispatch: {} # fire manually from the Actions tab to test
+
+permissions:
+  contents: write # needed to commit the updated x_last_posted_issue.txt
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install httpx tweepy
+
+      - name: Post to X
+        env:
+          TRENDPULSE_API_URL: ${{ secrets.TRENDPULSE_API_URL }}
+          TRENDPULSE_INTERNAL_TOKEN: ${{ secrets.TRENDPULSE_INTERNAL_TOKEN }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: |
+          if [ -z "$X_API_KEY" ]; then
+            echo "::error::X_API_KEY (and the other X_* secrets) are not set yet. See this workflow's header comment for what's needed."
+            exit 1
+          fi
+          python automation/post_to_x.py
+
+      - name: Commit updated state file
+        run: |
+          git config user.name "trendpulse-bot"
+          git config user.email "actions@github.com"
+          git diff --quiet x_last_posted_issue.txt || git commit -am "Mark issue as posted to X [skip ci]"
+          git push
