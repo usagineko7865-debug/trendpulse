@@ -15,16 +15,22 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Run as a non-root user (basic container hardening). /app/data is a
-# writable mount point for the SQLite file when run via docker-compose
-# (DB_PATH=/app/data/trendpulse.db) — created here so the non-root user
-# can actually write to it.
+# The app itself runs as a non-root user (basic container hardening).
+# /app/data is a writable mount point for the SQLite file when run via
+# docker-compose or Railway (DB_PATH=/app/data/trendpulse.db) — created
+# here so the non-root user owns it at build time. NOTE: a platform-mounted
+# persistent volume (Railway, etc.) re-attaches this path owned by root at
+# container start regardless of this build-time chown, so the container
+# itself stays root here and docker-entrypoint.sh re-asserts ownership
+# before dropping to appuser — see that script for why.
 RUN useradd --create-home appuser && mkdir -p /app/data && chown -R appuser:appuser /app
-USER appuser
+
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 # Most hosts (Railway, Render, Fly) inject $PORT; default to 8000 for
 # plain `docker run` / local use.
 ENV PORT=8000
 EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT}"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
