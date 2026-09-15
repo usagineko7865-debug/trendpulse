@@ -40,7 +40,7 @@ const FEATURES = [
     title: "Ships itself",
     tone: "coral",
     description:
-      "A Stripe payment instantly activates new subscribers; a scheduled workflow sends each issue straight to their inbox via Mailgun — nobody clicks send.",
+      "A Stripe payment instantly activates new subscribers; a scheduled workflow sends each issue straight to their inbox — nobody clicks send.",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" className="h-6 w-6">
         <path

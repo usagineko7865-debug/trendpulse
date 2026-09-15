@@ -38,7 +38,7 @@ trendpulse/
 │   ├── agents/
 │   │   ├── trend_scraper.py      TrendScraperAgent — real YouTube Data API v3
 │   │   └── content_generator.py  ContentGeneratorAgent — real Anthropic API
-│   ├── email_service.py  EmailService — real Mailgun REST API
+│   ├── email_service.py  EmailService — real Gmail SMTP (App Password)
 │   ├── stripe_webhook.py Stripe webhook handler (signature-verified)
 │   ├── workflow/
 │   │   └── automation.py AutomationWorkflow — orchestrates the full cycle
@@ -56,8 +56,8 @@ The spec asked for trend collection to "simulate Perplexity/web search." I
 deliberately built against the **real YouTube Data API v3** (`chart=mostPopular`)
 instead of having an LLM invent plausible-sounding trending videos — a paid
 newsletter that quietly fabricates its source data is selling something
-false to paying subscribers. Likewise, email delivery calls the real
-Mailgun REST API rather than simulating a send. The only intentional mock in
+false to paying subscribers. Likewise, email delivery goes out over real
+Gmail SMTP rather than simulating a send. The only intentional mock in
 the whole system is the LP's "Interactive Preview" widget, which is
 client-side only and does not call the live LLM — a public, unauthenticated
 form wired to a real Claude call would let anyone on the internet spend your
@@ -82,7 +82,7 @@ uvicorn main:app --reload --port 8000
 | `STRIPE_SECRET_KEY` | Stripe Dashboard → Developers → API keys |
 | `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Developers → Webhooks → add endpoint `POST /webhooks/stripe`, listen for `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted` |
 | `STRIPE_PRICE_ID` | The Price object backing your $29/mo Payment Link |
-| `MAILGUN_API_KEY` / `MAILGUN_DOMAIN` | [mailgun.com](https://mailgun.com) — verify a sending domain (DNS records) |
+| `GMAIL_ADDRESS` / `GMAIL_APP_PASSWORD` | [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) — needs 2-Step Verification enabled first. No domain to verify, but Gmail's own send limit applies (~500/day). |
 | `LP_BASE_URL` | Your deployed frontend's public URL |
 | `INTERNAL_TRIGGER_TOKEN` | Any long random string — protects `/internal/*` routes |
 
@@ -128,7 +128,7 @@ config before deploying.
 - Creating the Google Cloud project + enabling YouTube Data API v3
 - Creating an Anthropic account and API key
 - Creating a Stripe account, Product/Price, Payment Link, and registering the webhook endpoint
-- Creating a Mailgun account and verifying a sending domain (DNS)
+- Enabling 2-Step Verification on the Gmail account you'll send from and generating an App Password
 - Deploying both services somewhere (backend: Railway/Fly.io/Render/a VPS;
   frontend: Vercel/Netlify/Cloudflare Pages) and pointing `LP_BASE_URL` /
   `VITE_API_BASE_URL` at the real deployed URLs

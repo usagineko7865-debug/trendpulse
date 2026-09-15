@@ -1,52 +1,68 @@
-"""Real Mailgun REST API sender (not a mock). Mailgun's HTTP API needs only
-an API key + verified domain — no SMTP server to run. Free tier / low volume
-is inexpensive, which matters since this fires per-subscriber per issue.
+"""Sends real email via Gmail SMTP (not a mock) using an App Password —
+not Mailgun. Mailgun's free tier only gives a "sandbox" domain, which is
+hard-restricted to a handful of pre-authorized recipient addresses; a real
+subscriber would never receive anything. Gmail SMTP needs no domain
+verification and just works, at the cost of Gmail's own send limits
+(~500/day on a plain account) — fine for this project's current scale.
+
+smtplib is blocking, so every send runs in a worker thread via
+asyncio.to_thread to keep this awaitable without blocking the event loop.
 """
 from __future__ import annotations
 
 import asyncio
 import logging
-
-import httpx
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.utils import formataddr
 
 from config import get_settings
 
 logger = logging.getLogger("trendpulse.email_service")
 
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587  # STARTTLS
+
 
 class EmailService:
     def __init__(self):
         settings = get_settings()
-        self.api_key = settings.MAILGUN_API_KEY
-        self.domain = settings.MAILGUN_DOMAIN
-        self.from_addr = settings.MAILGUN_FROM
-        self.endpoint = f"https://api.mailgun.net/v3/{self.domain}/messages"
+        self.address = settings.GMAIL_ADDRESS
+        self.app_password = settings.GMAIL_APP_PASSWORD
+        self.from_name = settings.MAIL_FROM_NAME
+
+    def _send_sync(self, to: str, subject: str, html: str) -> None:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = formataddr((self.from_name, self.address))
+        msg["To"] = to
+        msg.attach(MIMEText(html, "html"))
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as smtp:
+            smtp.starttls()
+            smtp.login(self.address, self.app_password)
+            smtp.sendmail(self.address, [to], msg.as_string())
 
     async def send(self, to: str, subject: str, html: str) -> bool:
-        if not self.api_key or not self.domain:
-            logger.warning("MAILGUN_API_KEY/MAILGUN_DOMAIN not set — skipping send to %s", to)
+        if not self.address or not self.app_password:
+            logger.warning("GMAIL_ADDRESS/GMAIL_APP_PASSWORD not set — skipping send to %s", to)
             return False
-        async with httpx.AsyncClient() as client:
-            try:
-                resp = await client.post(
-                    self.endpoint,
-                    auth=("api", self.api_key),
-                    data={"from": self.from_addr, "to": to, "subject": subject, "html": html},
-                    timeout=15.0,
-                )
-                resp.raise_for_status()
-                return True
-            except httpx.HTTPStatusError as exc:
-                logger.error("Mailgun send failed for %s: %s — %s", to, exc, exc.response.text)
-                return False
-            except httpx.RequestError as exc:
-                logger.error("Mailgun request error for %s: %s", to, exc)
-                return False
+        try:
+            await asyncio.to_thread(self._send_sync, to, subject, html)
+            return True
+        except smtplib.SMTPException as exc:
+            logger.error("Gmail SMTP send failed for %s: %s", to, exc)
+            return False
+        except OSError as exc:
+            logger.error("Gmail SMTP connection error for %s: %s", to, exc)
+            return False
 
     async def send_bulk(self, recipients: list[str], subject: str, html: str,
-                         concurrency: int = 10) -> dict[str, int]:
-        """Fan out sends with bounded concurrency so we don't hammer Mailgun's
-        rate limits on a large subscriber list."""
+                         concurrency: int = 5) -> dict[str, int]:
+        """Fan out sends with bounded concurrency. Kept low (5) relative to
+        the old Mailgun version's 10 — Gmail is more sensitive to bursts of
+        simultaneous SMTP connections than an HTTP API is."""
         sem = asyncio.Semaphore(concurrency)
         sent, failed = 0, 0
 
