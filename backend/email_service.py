@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import smtplib
+import socket
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formataddr
@@ -23,6 +24,32 @@ logger = logging.getLogger("trendpulse.email_service")
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587  # STARTTLS
+
+
+class _IPv4SMTP(smtplib.SMTP):
+    """Plain smtplib.SMTP resolves smtp.gmail.com via whatever address
+    family the platform prefers, and on Railway's containers that's IPv6 —
+    which has no real outbound route there, so the connection fails with
+    "Network is unreachable" even though the credentials/ports are fine.
+    Overriding just the socket-creation step to force AF_INET sidesteps it
+    without touching global state (no monkeypatching socket.getaddrinfo),
+    so this stays safe under send_bulk's concurrent threads. TLS hostname
+    verification in starttls() still checks against self._host
+    ("smtp.gmail.com" as passed to the constructor), unaffected by this."""
+
+    def _get_socket(self, host, port, timeout):
+        if self.debuglevel > 0:
+            self._print_debug("connect:", (host, port))
+        family, socktype, proto, _canonname, sockaddr = socket.getaddrinfo(
+            host, port, socket.AF_INET, socket.SOCK_STREAM
+        )[0]
+        sock = socket.socket(family, socktype, proto)
+        if timeout is not socket._GLOBAL_DEFAULT_TIMEOUT:
+            sock.settimeout(timeout)
+        if self.source_address:
+            sock.bind(self.source_address)
+        sock.connect(sockaddr)
+        return sock
 
 
 class EmailService:
@@ -39,7 +66,7 @@ class EmailService:
         msg["To"] = to
         msg.attach(MIMEText(html, "html"))
 
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as smtp:
+        with _IPv4SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as smtp:
             smtp.starttls()
             smtp.login(self.address, self.app_password)
             smtp.sendmail(self.address, [to], msg.as_string())
