@@ -8,6 +8,7 @@ Routes:
     POST /webhooks/stripe        Stripe webhook (checkout/subscription lifecycle)
     POST /internal/run-cycle     manually trigger the AutomationWorkflow (protected)
     GET  /internal/latest-issue  inspect the most recently generated issue (protected)
+    GET  /internal/stats         aggregate subscriber/issue counts, no PII (protected)
 
 Scheduling: this file does NOT run a built-in scheduler by design (keeps the
 web process lightweight and horizontally scalable). Point any external
@@ -126,3 +127,11 @@ def latest_issue(x_internal_token: str | None = Header(None)):
     if row is None:
         raise HTTPException(status_code=404, detail="No issues generated yet")
     return dict(row)
+
+
+@app.get("/internal/stats")
+def stats(x_internal_token: str | None = Header(None)):
+    """Aggregate counts only (no emails) — cheap way to check real growth
+    without needing direct DB/SSH access to the deployed container."""
+    _check_internal_token(x_internal_token)
+    return db.subscriber_stats()

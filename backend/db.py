@@ -99,6 +99,25 @@ def add_free_subscriber(email: str) -> None:
         )
 
 
+def subscriber_stats() -> dict:
+    """Aggregate counts only — no emails/PII — for a cheap internal health check."""
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT plan, status, COUNT(*) AS n FROM subscribers GROUP BY plan, status"
+        ).fetchall()
+        total_issues = conn.execute("SELECT COUNT(*) AS n FROM issues").fetchone()["n"]
+        latest = conn.execute(
+            "SELECT MAX(created_at) AS ts FROM subscribers"
+        ).fetchone()["ts"]
+    by_plan_status = {f"{r['plan']}_{r['status']}": r["n"] for r in rows}
+    return {
+        "by_plan_status": by_plan_status,
+        "total_subscribers": sum(by_plan_status.values()),
+        "total_issues": total_issues,
+        "last_signup_at": latest,
+    }
+
+
 def list_active_subscribers(plan: str | None = None) -> list[Subscriber]:
     q = "SELECT * FROM subscribers WHERE status = 'active'"
     args: tuple = ()
