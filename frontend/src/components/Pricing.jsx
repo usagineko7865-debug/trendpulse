@@ -29,8 +29,8 @@ export default function Pricing() {
           </div>
           <ul className="mt-6 space-y-3 text-sm text-ink-soft">
             <PlanItem>Daily multilingual trend post (EN/ES/JA)</PlanItem>
-            <PlanItem>Top-3 content-worthy videos, twice a week</PlanItem>
-            <PlanItem>Community access</PlanItem>
+            <PlanItem>Fresh trend angles on the website every morning</PlanItem>
+            <PlanItem>No email delivery</PlanItem>
           </ul>
           <a
             href="#signup"

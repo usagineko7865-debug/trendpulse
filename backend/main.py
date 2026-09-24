@@ -4,7 +4,7 @@
 
 Routes:
     GET  /                       health check
-    POST /signup                 free-trial email capture (adds a 'free' subscriber)
+    POST /signup                 free web-feed signup (adds a 'free' subscriber)
     POST /webhooks/stripe        Stripe webhook (checkout/subscription lifecycle)
     POST /internal/run-cycle     manually trigger the AutomationWorkflow (protected)
     GET  /internal/latest-issue  inspect the most recently generated issue (protected)

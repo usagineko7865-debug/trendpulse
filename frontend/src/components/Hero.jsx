@@ -95,7 +95,7 @@ export default function Hero() {
               disabled={status === "loading"}
               className="shrink-0 rounded-full bg-coral px-6 py-3.5 text-sm font-semibold text-white shadow-pop transition hover:bg-coral-deep disabled:opacity-60"
             >
-              {status === "loading" ? "Starting…" : "Get my first issue"}
+              {status === "loading" ? "Joining…" : "Join the free feed"}
             </button>
           </form>
 
@@ -104,7 +104,7 @@ export default function Hero() {
               ? "You're in! Bookmark this page — fresh trend angles land here every morning. Want it delivered to your inbox instead? Upgrade to Pro anytime. 🎉"
               : status === "error"
               ? "Couldn't reach the API — is the backend running?"
-              : "Free forever plan · no credit card · unsubscribe in one click"}
+              : "Free web feed · no credit card · email delivery is included with Pro"}
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-ink-soft">
